@@ -3,7 +3,10 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  recaptcha: {
+    siteKey: '6Lc7zgEVAAAAABC-rSJti6b3fRC5FJwG5z9dHgAN',
+  },
 };
 
 /*

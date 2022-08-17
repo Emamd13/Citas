@@ -1,0 +1,16 @@
+
+.purple{
+    background-color: #9c29a1;
+}
+
+.navbar-toggler{
+    background-color: transparent;
+}
+
+h1,h2,h3,a{
+    color: white;
+}
+
+.mat-icon {
+    font-size: 50px;
+  }

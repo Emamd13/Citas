@@ -1,0 +1,19 @@
+.principal {
+
+  bottom: 30px;
+ 
+}
+.section-imprimir{
+  padding-bottom: 20%;
+}
+.mat-input-wrapper{ width:400px !important; }
+
+.card-header{
+  background-color: #6a3e8c;
+  color: white;
+
+}
+
+.card-body{
+  background-color:#fcf5fe
+}

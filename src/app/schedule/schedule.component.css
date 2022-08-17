@@ -1,0 +1,43 @@
+.formulario{
+    
+    bottom: -90px;
+}
+
+.card-header{
+  background-color: #6a3e8c;
+  color: white;
+
+}
+.form-inputs{
+    position: relative;
+    bottom: -20px;
+}
+
+.registers{
+    position: relative;
+    bottom: -150px;
+}
+
+.button-register{
+    position: relative;
+    float: right;
+    
+}
+
+.re-captcha.is-invalid > div {
+    border: 1px solid #dc3545 !important;
+    border-radius: 0.2rem;
+  }
+
+  .recap{
+    position: relative;
+    float: right;
+    padding: 3px;
+    margin-bottom: 3px;
+  }
+  mat-form-field {
+    width: 100%;
+  }
+  .card-body{
+    background-color:#fcf5fe
+  }

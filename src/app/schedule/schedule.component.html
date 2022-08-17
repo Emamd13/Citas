@@ -1,0 +1,107 @@
+
+<div class="container formulario">
+
+    <ngx-spinner
+    bdColor="rgba(51,51,51,0.8)"
+    size="medium"
+    color="#fff"
+    type="ball-scale-multiple"
+  >
+    <p style="font-size: 20px; color: white">Espere un momento...</p>
+  </ngx-spinner>
+
+    <div class="card">
+        <div class="card-header">
+          <h3>Agendar cita</h3> 
+        </div>
+
+        <div class="card-body">
+            <form #form="ngForm">
+
+            <div class="form-row container">
+                <div class="col-6">
+                    <select  matTooltip="Selecciona un tramite" readonly="readonly" class="form-select" aria-label="Default select example" (change)="getValue($event)">
+                        <option [value]="0">Selecciona un tramite</option>
+                        <option *ngFor="let tramite of tramites" [value]="tramite.idTrmte">{{tramite.tramite}}</option>
+
+                    </select>
+                </div>
+
+ 
+                <div class="col-6 container">
+                    <div class="form-row form-inputs container inputs-validate" *ngIf="todo">
+                        <div *ngIf="NoPlaca" class="col">
+                            <mat-form-field   appearance="fill">
+                                <mat-label>No. placa vehicular</mat-label>
+                                <input matTooltip="No. placa vehicular" [disabled]="readonly"   name="nPlaca" matInput [formControl]="plate">
+                                <mat-icon matSuffix>calendar_view_day</mat-icon>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="NoSerie" class="col">
+                            <mat-form-field   appearance="fill">
+                                <mat-label>No. Serie vehicular</mat-label>
+                                <input matTooltip="No. Serie vehicular"  [disabled]="readonly" name="nSerie" matInput [formControl]="vin">
+                                <mat-icon matSuffix> directions_car</mat-icon>
+                            </mat-form-field>
+                        </div>
+        
+                        <div class="col">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Curp</mat-label>
+                                <input matTooltip="Curp"  [disabled]="readonly" name="CURP" matInput [formControl]="CURP">
+                                <mat-icon matSuffix>class</mat-icon>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="serie" class="col">
+                            <mat-form-field appearance="fill">
+                                <mat-label >Serie de pago</mat-label>
+                                <input  matTooltip="Serie de pago" [disabled]="readonly" name="paymentVin" matInput [formControl]="paymentVin">
+                                <mat-icon matSuffix> attach_money</mat-icon>
+                            </mat-form-field>
+                        </div>
+                        <div *ngIf="folio" class="col">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Folio de pago</mat-label>
+                                <input matTooltip="Folio de pago" [disabled]="readonly" name="paymentFolio"  matInput [formControl]="paymentFolio">
+                                <mat-icon matSuffix> money</mat-icon>
+                            </mat-form-field>
+                        </div>
+        
+        
+                    </div>
+                </div>
+            </div>
+
+
+           
+            <br>
+            <br>
+
+            <div  class="recap" *ngIf="recaptchaC">
+                <re-captcha   (resolved)="resolved($event)"  id="recaptcha" name="recaptcha" #recaptcha="ngModel" [(ngModel)]="token" required
+                    [class.is-invalid]="recaptcha.invalid && (recaptcha.dirty || recaptcha.touched)"></re-captcha>
+                <div *ngIf="recaptcha.invalid && (recaptcha.dirty || recaptcha.touched)" class="invalid-feedback">
+                    <div *ngIf="recaptcha.errors?.['required']">Se requiere seleccionar el recaptcha</div>
+                </div>
+            </div>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <div class="button-register  form-row" *ngIf="todo">
+                <div class="col">  <button mat-raised-button color="warn">Rehacer cita</button></div>
+                <div class="col"> <button mat-raised-button color="primary" [disabled]="readonly" (click)="send(form)" >Crear cita</button></div>
+
+                
+
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container registers" *ngIf="registersForm">
+    <app-register></app-register>
+</div>

@@ -1,0 +1,208 @@
+<ngx-spinner bdColor="rgba(51,51,51,0.8)" size="medium" color="#fff" type="ball-scale-multiple">
+    <p style="font-size: 20px; color: white">Espere un momento...</p>
+</ngx-spinner>
+<div class="card">
+    <div class="card-body">
+
+        <mat-vertical-stepper [linear]="true" #stepper>
+            <mat-step [stepControl]="firstFormGroup">
+                <form [formGroup]="firstFormGroup">
+                    <ng-template matStepLabel>Datos de contacto</ng-template>
+
+                    <div class="form-row container">
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Nombre</mat-label>
+                                <input readonly matInput placeholder="Nombre" formControlName="name" required>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Apellidos</mat-label>
+                                <input readonly matInput placeholder="Apellidos" formControlName="lastName" required>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Teléfono fijo</mat-label>
+                                <input matInput placeholder="Teléfono fijo" formControlName="phone">
+                            </mat-form-field>
+                        </div>
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Teléfono o Celular</mat-label>
+                                <input matInput placeholder="Teléfono o Celular" formControlName="cellPhone" required>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Correo</mat-label>
+                                <input type="email" matInput placeholder="Correo" formControlName="mail" required>
+                            </mat-form-field>
+                        </div>
+                        <div class="col-lg-6">
+                            <mat-form-field appearance="fill">
+                                <mat-label>Confirmación de correo</mat-label>
+                                <input type="email" matInput placeholder="Confirmación de correo"
+                                    (keyup)="onKeyMail($event)" formControlName="mailCon" required>
+                            </mat-form-field>
+                            <div *ngIf="confirma" class="alert">
+                                <p style="color:red ;"> El correo no es correcto</p>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div>
+                        <!--<p>Go to a different step to see the error state</p>-->
+                        <button [disabled]="confirma" mat-button matStepperNext>Siguiente</button>
+                    </div>
+                </form>
+            </mat-step>
+            <mat-step [stepControl]="secondFormGroup">
+
+                <div class="form-row container">
+                    <ng-template matStepLabel>Elige delegación</ng-template>
+                    <div class="col-lg-6">
+                        <mat-selection-list (selectionChange)="selectionChange($event.option)" #shoes
+                            [multiple]="false">
+                            <mat-list-option *ngFor="let delegacione of delegaciones , let i = index"
+                                [value]="delegacione" [selected]="delegacione && i == 0">
+                                {{delegacione.delegacion}}
+                            </mat-list-option>
+                        </mat-selection-list>
+                    </div>
+                    <div class="col-lg-6 map-wrapper">
+
+                        <div id="map"></div>
+
+
+                        <!--  <div class="thumbnail">
+                            <img src="{{src}}" class="img-responsive" alt="Nature" style="width:100%">
+                            <div class="caption">
+                                <p>Domicilio: {{etiqueta}}</p>
+                            </div>
+
+                        </div>-->
+                    </div>
+
+
+                </div>
+                <div>
+                    <!-- <p>Go to a different step to see the error state</p>-->
+                    <button mat-button matStepperPrevious>Anterior</button>
+                    <button mat-button matStepperNext>Siguiente</button>
+                </div>
+
+            </mat-step>
+            <mat-step>
+                <ng-template matStepLabel>Elige fecha y hora</ng-template>
+                <div class="form-row container">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <full-calendar (dayRender)="dayRender($event)" locale="es" [options]="calendarOptions">
+                                </full-calendar>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6" *ngIf="hoursBoolean">
+                        <!-- <mat-selection-list (selectionChange)="selectionHourChange($event.option)" #hoursT
+                            [multiple]="false">
+                            <mat-list-option *ngFor="let hour of hours , let i = index" [value]="hour">
+                                {{hour.hrrio}}
+                            </mat-list-option>
+
+                        </mat-selection-list>
+                        <mat-paginator #paginator [length]="hours.length" [pageSize]="10"  [pageIndex]="pageIndex"
+                          [pageSizeOptions]="[5, 10, 25, 100]" (page)="getPaginatorData($event)">
+                        </mat-paginator>-->
+                        <div class="mat-elevation-z8">
+                            <h2>Fecha Seleccionada :<strong> {{fechaTitulo | date:'dd-MM-yy'}}</strong></h2>
+                            <mat-table [dataSource]="dataSources" matSort>
+
+
+                                <!-- ID Column 
+                                <ng-container  matColumnDef="idHrrio">
+                                    <mat-header-cell  showInput="none"  *matHeaderCellDef mat-sort-header> ID </mat-header-cell>
+                                    <mat-cell showInput="none"  *matCellDef="let element"> {{element.idHrrio}} </mat-cell>
+                                </ng-container>-->
+
+
+
+                                <!-- Position Column -->
+                                <ng-container matColumnDef="hrrio">
+                                    <mat-header-cell *matHeaderCellDef> HORARIO </mat-header-cell>
+                                    <mat-cell *matCellDef="let element"> {{element.hrrio}} </mat-cell>
+                                </ng-container>
+
+                                <!-- Name Column -->
+                                <ng-container matColumnDef="disponible">
+                                    <mat-header-cell *matHeaderCellDef> LUGARES </mat-header-cell>
+                                    <mat-cell *matCellDef="let element"> {{element.disponible}} </mat-cell>
+                                </ng-container>
+
+
+
+                                <mat-header-row class="demo-row-is-clicked" *matHeaderRowDef="displayedColumns">
+                                </mat-header-row>
+                                <mat-row [ngClass]="{'highlight': selectedRowIndex == row.idHrrio}"
+                                    (click)="getRecord(row)" *matRowDef="let row; columns: displayedColumns;">
+                                </mat-row>
+                            </mat-table>
+                            <div *ngIf="hours.length === 0">
+                                <p class="centerParrafo">Horarios no disponibles para la fecha seleccionada: <strong>
+                                        {{fechaTitulo}}</strong></p>
+                            </div>
+
+                            <mat-paginator #paginator [pageSizeOptions]="[5, 10, 15, 20,25,30,35,40,45,50,100]">
+                            </mat-paginator>
+                        </div>
+                    </div>
+                    <br>
+                    <br>
+                    <br>
+                    <br>
+                    <br>
+                    <div class="col-lg-12 center">
+                        <button mat-raised-button (click)="insertCita(mymodal)" [disabled]="isDisabled"
+                            color="accent">Registrar cita</button>
+                    </div>
+                </div>
+                <div>
+                    <button mat-button matStepperPrevious>Atras</button>
+                    <!--<button mat-button (click)="stepper.reset()">Reset</button>-->
+                </div>
+            </mat-step>
+        </mat-vertical-stepper>
+
+    </div>
+
+
+</div>
+
+<ng-template #mymodal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Documento de registro</h4>
+        <button type="button" class="close" aria-label="Close" (click)="close()">
+            <span aria-hidden="true">×</span>
+        </button>
+    </div>
+    <div class="modal-body">
+       <pdf-viewer [src]="pdfSrc" [stick-to-page]="true" [render-text]="true" [original-size]="false" style="width: 400px; height: 500px">
+        </pdf-viewer>
+        <!--  <iframe [src]="pdfSrc"></iframe>-->
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" (click)="close()">Cerrar</button>
+    </div>
+</ng-template>
+
+
+<br>
+<br>
+<br>
+<br>

@@ -1,0 +1,48 @@
+.register{
+    position: relative;
+    bottom: -400px;
+}
+
+
+.center{
+    margin-left: 50%;
+}
+.centerParrafo{
+  margin-left: 20%;
+}
+table {
+    width: 100%;
+  }
+  .highlight{
+    background: #42A948; /* green */
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .fc-today {
+    background: #0c17de !important;
+  }
+
+  .map-wrapper {
+    position: relative;
+  }
+ 
+  #map {
+  
+    height: 500px;
+    width: 100%;
+    
+    position: relative;
+   
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border: solid 3px #654;
+  }
+
+  .card-body{
+    background-color:#fcf5fe
+  }
