@@ -25,13 +25,13 @@
                         <div class="col-lg-6">
                             <mat-form-field appearance="fill">
                                 <mat-label>Teléfono fijo</mat-label>
-                                <input matInput placeholder="Teléfono fijo" formControlName="phone">
+                                <input matInput  type="tel" placeholder="Teléfono fijo" formControlName="phone">
                             </mat-form-field>
                         </div>
                         <div class="col-lg-6">
                             <mat-form-field appearance="fill">
                                 <mat-label>Teléfono o Celular</mat-label>
-                                <input matInput placeholder="Teléfono o Celular" formControlName="cellPhone" required>
+                                <input matInput type="tel" placeholder="Teléfono o Celular" formControlName="cellPhone" required>
                             </mat-form-field>
                         </div>
 
@@ -120,7 +120,7 @@
                           [pageSizeOptions]="[5, 10, 25, 100]" (page)="getPaginatorData($event)">
                         </mat-paginator>-->
                         <div class="mat-elevation-z8">
-                            <h2>Fecha Seleccionada :<strong> {{fechaTitulo | date:'dd-MM-yy'}}</strong></h2>
+                            <h2>Fecha :<strong> {{fechaTitulo | date:'dd-MM-yy'}}</strong></h2>
                             <mat-table [dataSource]="dataSources" matSort>
 
 
@@ -161,14 +161,10 @@
                             </mat-paginator>
                         </div>
                     </div>
-                    <br>
-                    <br>
-                    <br>
-                    <br>
-                    <br>
-                    <div class="col-lg-12 center">
-                        <button mat-raised-button (click)="insertCita(mymodal)" [disabled]="isDisabled"
-                            color="accent">Registrar cita</button>
+                    
+                    <div class="col-lg-12"  >
+                        <button mat-raised-button style="float: right;"  (click)="insertCita(mymodal)" [disabled]="isDisabled"
+                        color="primary" >Registrar cita</button>
                     </div>
                 </div>
                 <div>
@@ -185,16 +181,38 @@
 
 <ng-template #mymodal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Documento de registro</h4>
+        <h4 class="modal-title" id="modal-basic-title">Cita agendada con exito</h4>
         <button type="button" class="close" aria-label="Close" (click)="close()">
             <span aria-hidden="true">×</span>
         </button>
     </div>
     <div class="modal-body">
-       <pdf-viewer [src]="pdfSrc" [stick-to-page]="true" [render-text]="true" [original-size]="false" style="width: 400px; height: 500px">
-        </pdf-viewer>
-        <!--  <iframe [src]="pdfSrc"></iframe>-->
+        <div class="alert alert-danger" role="alert">
+            <p >Si usted no descarga el pdf ahora, no olvide guardar su <strong> Clave de control de cita</strong>  ya que no tendra oportunidad de volverla a recuperar</p>
+       
+        </div> 
+        <!--<pdf-viewer [src]="pdfSrc" [render-text]="true" [stick-to-page]="true" [original-size]="false" style="width: 400px; height: 500px">
+        </pdf-viewer>-->
 
+        <!-- <iframe  type="application/x-google-chrome-pdf" width='100%' height='100%' [src]='urlSafe'></iframe>-->
+        <div class="container-iframe">
+            <iframe type="application/x-google-chrome-pdf" class="responsive-iframe" [src]='urlSafe'></iframe>
+        </div>
+
+        <!-- <embed [src]="urlSafe" type="application/pdf" id="pdf" width="100%" height="100%"/>-->
+        <!-- <ngx-extended-pdf-viewer src="pdfSrc" >
+        </ngx-extended-pdf-viewer>-->
+
+
+        <!--   <pdf-viewer [src]="pdfSrc" [stick-to-page]="true" [render-text]="true" [original-size]="false" style="width: 400px; height: 500px">
+        </pdf-viewer>-->
+        <!--   <object ng-bind="pdfSrc" data="{{pdfSrc}}" type="application/pdf" width="100%" height="800px">
+        </object>
+        
+       <iframe [src]="pdfSrc"></iframe>-->
+
+        <!--   <embed [src]="pdfSrc" frameborder="0" width="100%" height="400px">
+      <iframe [src]="pdfSrc" height="100%" width="100%"></iframe>-->
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" (click)="close()">Cerrar</button>

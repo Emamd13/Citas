@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
 import { NgxSmartModalService } from 'ngx-smart-modal';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import * as L from 'leaflet';
 import Swal from 'sweetalert2';
 @Component({
@@ -32,7 +33,8 @@ import Swal from 'sweetalert2';
 })
 export class RegisterComponent implements OnInit, AfterViewInit {
   Events: any[] = [];
-
+  service: string;
+  urlSafe: SafeResourceUrl;
   calendarOptions: CalendarOptions = {
     initialView: 'dayGridMonth',
     selectable: true,
@@ -83,12 +85,13 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
   selectedRowIndex = -1;
   ngAfterViewInit() {
+    this.service = 'http://js.syncfusion.com/demos/ejservices/api/PdfViewer';
 
   }
 
   constructor(private _formBuilder: FormBuilder, private spinner: NgxSpinnerService,
     private registerService: RegisterService, private router: Router, public modal: NgxSmartModalService, public dialog: MatDialog,
-    private modalService: NgbModal) {
+    private modalService: NgbModal, public sanitizer: DomSanitizer) {
     this.formularioDatos = false;
     this.hoursBoolean = false;
     this.isDisabled = true;
@@ -107,7 +110,7 @@ export class RegisterComponent implements OnInit, AfterViewInit {
 
   getRecord(row: any) {
     this.selectedRowIndex = row.idHrrio;
-    console.log(row);
+
 
     this.hora = row.idHrrio;
     this.horaName = row.hrrio;
@@ -119,15 +122,16 @@ export class RegisterComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     const fecha = new Date();
 
-  //  let formatted_date =  fecha.getDate()  + "-" + (fecha.getMonth() + 1) + "-" + fecha.getFullYear()
+    //  let formatted_date =  fecha.getDate()  + "-" + (fecha.getMonth() + 1) + "-" + fecha.getFullYear()
     //let fechanueva = formatted_date;
-    let fechanueva =  fecha.getFullYear() + "-" + (fecha.getMonth() + 1) + "-" + fecha.getDate()
-this.fechaTitulo = fechanueva;
+    let fechanueva = fecha.getFullYear() + "-" + (fecha.getMonth() + 1) + "-" + fecha.getDate()
+    this.fechaTitulo = fechanueva;
+    this.dateU = fechanueva;
     //  this.dataSources.paginator = this.paginator;
     this.JsonCurp = sessionStorage.getItem('mapCurp');
     let JsonDe = JSON.parse(sessionStorage.getItem('delegaciones') || '{}');
     this.selectedOptions = JsonDe[0];
-    console.log(sessionStorage.getItem('delegaciones'));
+
     this.idDelegacion = JsonDe[0].iddelegacion;
 
     this.delegacionName = JsonDe[0].delegacion;
@@ -148,17 +152,17 @@ this.fechaTitulo = fechanueva;
 
 
     this.delegaciones = JsonDe;
-    console.log(this.delegaciones);
-    console.log(sessionStorage.getItem('mapCurp'));
+
+
     let curp = JSON.parse(this.JsonCurp);
-    console.log(JSON.parse(this.JsonCurp));
+
 
     this.registerService.getDomicile(this.idDelegacion.toString()).subscribe(response => {
-      console.log(response);
+
 
       this.src = 'data:image/png;base64,' + this.arrayBufferToBase64(response.data.dlgcionMpa);
       this.etiqueta = response.data.etqtaDlgDmclio;
-      console.log(this.src);
+
       this.map = L.map('map', {
         center: [response.data.latitud, response.data.longitud],
         zoom: 16
@@ -197,15 +201,15 @@ this.fechaTitulo = fechanueva;
 
       }
     })
-
+    const MOBILE_PATTERN = /[0-9\+\-\ ]/;
 
     this.firstFormGroup = this._formBuilder.group({
       name: [curp.nombre, Validators.required],
       lastName: [curp.apellidoPaterno + ' ' + curp.apellidoMaterno, Validators.required],
-      cellPhone: ['', Validators.required], //, Validators.maxLength(10), Validators.pattern(this.numberRegEx)
+      cellPhone: ['', [Validators.required, Validators.pattern(("[6-9]\\d{9}"))]], //, Validators.maxLength(10), Validators.pattern(this.numberRegEx)
       mail: ['', [Validators.required, Validators.email]],
       mailCon: ['', [Validators.required, Validators.email]],
-      phone: [''],
+      phone: ['', Validators.pattern(("[6-9]\\d{9}"))],
       /// phone: new FormControl('')
 
       /*   name: new FormControl(curp.nombre, Validators.required),
@@ -263,16 +267,16 @@ this.fechaTitulo = fechanueva;
 
     })
 
-    console.log(option.value.iddelegacion);
+
   }
 
   getDates() {
     this.isDisabled = true;
     let JsonDe = JSON.parse(sessionStorage.getItem("datosTyS") || '{}');
-    console.log(JsonDe);
+
 
     this.registerService.getDates(JsonDe, this.idDelegacion.toString()).subscribe(response => {
-      console.log(response);
+
       let arreglo = [];
 
       for (let i = 0; i < response.data.length; i++) {
@@ -325,23 +329,52 @@ this.fechaTitulo = fechanueva;
   getHourR() {
     let idDelegacion = this.idDelegacion.toString();
     const fecha = this.dateU;
-    console.log(fecha);
+
 
     //let formatted_date = new Date(fecha).getDate()  + "-" + (new Date(fecha).getMonth() + 1) + "-" + new Date(fecha).getFullYear()
-   // let fechanueva = formatted_date;
-     let fechanueva = this.dateFormat(fecha, "yyyy-MM-dd");
-  //  console.log(fechanueva.toString());
-    let obj = JSON.parse(sessionStorage.getItem("datosTyS") || '{}');
-    this.registerService.getHours(obj, idDelegacion, fecha.toString()).subscribe(response => {
+    // let fechanueva = formatted_date;
+    let fechanueva = this.dateFormat(fecha, "yyyy-MM-dd");
 
+    let obj = JSON.parse(sessionStorage.getItem("datosTyS") || '{}');
+
+    const numeroDia = new Date(fechanueva).getDay();
+   
+
+
+    if (numeroDia == 5 || numeroDia == 6) {
+
+    
+      this.hours = [];
+      this.dataSources = new MatTableDataSource();
+      this.dataSources.paginator = this.paginator;
+      this.selectedRowIndex = -1;
+    } else {
+      this.registerService.getHours(obj, idDelegacion, fechanueva.toString()).subscribe(response => {
+        
+        this.hours = response.data;
+        this.dataSources = new MatTableDataSource(response.data);
+        this.dataSources.paginator = this.paginator;
+        this.selectedRowIndex = -1;
+        //this.length = response.data.length;
+
+
+      })
+
+    }
+
+
+
+
+    /*this.registerService.getHours(obj, idDelegacion, fecha.toString()).subscribe(response => {
+      console.log(response);
       this.hours = response.data;
       this.dataSources = new MatTableDataSource(response.data);
       this.dataSources.paginator = this.paginator;
       this.selectedRowIndex = -1;
       //this.length = response.data.length;
 
-      console.log(response);
-    })
+
+    })*/
 
     this.hoursBoolean = true;
   }
@@ -350,24 +383,40 @@ this.fechaTitulo = fechanueva;
   getHour() {
     let idDelegacion = this.idDelegacion.toString();
     const fecha = new Date();
-    console.log(fecha);
 
-   // let formatted_date =  new Date(fecha).getDate()  + "-" + (new Date(fecha).getMonth() + 1) + "-" + new Date(fecha).getFullYear()
+
+    // let formatted_date =  new Date(fecha).getDate()  + "-" + (new Date(fecha).getMonth() + 1) + "-" + new Date(fecha).getFullYear()
     //let fechanueva = formatted_date;
 
     let fechanueva = this.dateFormat(fecha, "yyyy-MM-dd");
-    console.log(fechanueva.toString());
-    let obj = JSON.parse(sessionStorage.getItem("datosTyS") || '{}');
-    this.registerService.getHours(obj, idDelegacion, fechanueva.toString()).subscribe(response => {
 
-      this.hours = response.data;
-      this.dataSources = new MatTableDataSource(response.data);
+    let obj = JSON.parse(sessionStorage.getItem("datosTyS") || '{}');
+    
+    const numeroDia = new Date(fechanueva).getDay();
+   
+
+
+    if (numeroDia == 5 || numeroDia == 6) {
+
+    
+      this.hours = [];
+      this.dataSources = new MatTableDataSource();
       this.dataSources.paginator = this.paginator;
       this.selectedRowIndex = -1;
-      //this.length = response.data.length;
+    } else {
+      this.registerService.getHours(obj, idDelegacion, fechanueva.toString()).subscribe(response => {
+      
+        this.hours = response.data;
+        this.dataSources = new MatTableDataSource(response.data);
+        this.dataSources.paginator = this.paginator;
+        this.selectedRowIndex = -1;
+        //this.length = response.data.length;
 
-      console.log(response);
-    })
+
+      })
+
+    }
+
 
     this.hoursBoolean = true;
   }
@@ -379,11 +428,11 @@ this.fechaTitulo = fechanueva;
     //  alert('date click! ' + arg.dateStr)
     this.dateU = arg.dateStr;
 
-   // let fechanueva = this.dateFormat(arg.dateStr, "dd-MM-yyyy");
-    let formatted_date =  new Date(arg.dateStr).getDate()  + "-" + (new Date(arg.dateStr).getMonth() + 1) + "-" + new Date(arg.dateStr).getFullYear()
+    // let fechanueva = this.dateFormat(arg.dateStr, "dd-MM-yyyy");
+    let formatted_date = new Date(arg.dateStr).getDate() + "-" + (new Date(arg.dateStr).getMonth() + 1) + "-" + new Date(arg.dateStr).getFullYear()
     let fechanueva = formatted_date;
     this.fechaTitulo = arg.dateStr;
-    console.log(this.dateU);
+
     this.isDisabled = true;
     let dateSuccess = false;
     for (let i = 0; i < this.datesArray.length; i++) {
@@ -401,14 +450,14 @@ this.fechaTitulo = fechanueva;
 
       if (obj != null) {
         this.registerService.getHours(obj, idDelegacion, arg.dateStr).subscribe(response => {
-
+        
           this.hours = response.data;
           this.dataSources = new MatTableDataSource(response.data);
           this.dataSources.paginator = this.paginator;
           this.selectedRowIndex = -1;
           //this.length = response.data.length;
 
-          console.log(response);
+
         })
       }
 
@@ -417,18 +466,18 @@ this.fechaTitulo = fechanueva;
     } else {
       this.hours = [];
       this.dataSources = new MatTableDataSource;
-      console.log("no existe ");
+
     }
   }
 
 
   selectionHourChange(option: MatListOption) {
-    console.log(option.value);
+
   }
 
 
   getPaginatorData(event: any) {
-    console.log(event);
+
     if (event.pageIndex === this.pageIndex + 1) {
       this.lowValue = this.lowValue + 10;
       this.highValue = this.highValue + 10;
@@ -440,7 +489,7 @@ this.fechaTitulo = fechanueva;
     this.pageIndex = event.pageIndex;
   }
   onKeyMail(event: any) {
-    console.log(event.target.value);
+
     if (this.firstFormGroup.value.mail == event.target.value) {
       this.confirma = false;
       return true;
@@ -464,26 +513,31 @@ this.fechaTitulo = fechanueva;
           /*   const dialogConfig = new MatDialogConfig();
              dialogConfig.disableClose = true;
              dialogConfig.autoFocus = true;*/
-          this.pdfSrc = 'data:image/pdf;base64,' + this.arrayBufferToBase64(response.pdf);
+          this.pdfSrc = 'data:application/pdf;base64,' + this.arrayBufferToBase64(response.pdf);
+          this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfSrc);
           //    this.dialog.open(DialogContentExampleDialog, dialogConfig);
           this.spinner.hide();
-       
-            //const dialogConfig = new MatDialogConfig();
-        this.modalService.open(content, { ariaLabelledBy: 'modal-basic-title', backdrop  : 'static',
-        keyboard  : false }).result.then((result) => {
-         
-          this.closeResult = `Closed with: ${result}`;
-        }, (reason) => {
-        
-          this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-        });
-        console.log(response);
+
+          ///window.open("data:application/pdf;base64," + Base64.encode(out));
+          //const dialogConfig = new MatDialogConfig();
+          this.modalService.open(content, {
+            ariaLabelledBy: 'modal-basic-title', backdrop: 'static',
+            keyboard: false,
+            windowClass: 'my-class'
+          }).result.then((result) => {
+
+            this.closeResult = `Closed with: ${result}`;
+          }, (reason) => {
+
+            this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+          });
+
           // this.router.navigate(['/']);
           //   this.modal.getModal("homeModal").open();
 
           // this.modalView$.nativeElement.classList.add('visible');
         } else {
-          console.log("Entra por que ya hay una citaa..");
+
           this.getHourR();
           this.getDates();
           this.spinner.hide();
@@ -491,13 +545,13 @@ this.fechaTitulo = fechanueva;
             icon: 'error',
             title: 'Ocurrio un error al registrar su cita',
             text: response.mensaje,
-    
+
           })
         }
-      
+
       })
     } catch (error) {
-      console.log("try");
+
       Swal.fire({
         icon: 'error',
         title: 'Ocurrio un error al registrar su cita',
@@ -507,24 +561,24 @@ this.fechaTitulo = fechanueva;
       this.getHourR();
       this.getDates();
       this.spinner.hide();
-    
+
 
     }
   }
-close(){
+  close() {
 
-  window.location.reload();
-}
- 
+    window.location.reload();
+  }
+
   dayRender(dayRenderInfo: any) {
     let dateMoment = moment(dayRenderInfo.date);
-    console.log(dateMoment);
+
     if (dateMoment.day() === 6 || dateMoment.day() === 0) {
-      console.log("if-----");
+
       dayRenderInfo.el.style.backgroundColor = '#d6e7e1';
     }
     else {
-      console.log("if-----");
+
       dayRenderInfo.el.style.backgroundColor = 'white';
     }
     return dayRenderInfo;
@@ -540,20 +594,20 @@ close(){
     }
   }
 
-  formatDate(date:any) {
+  formatDate(date: any) {
     var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
 
-    if (month.length < 2) 
-        month = '0' + month;
-    if (day.length < 2) 
-        day = '0' + day;
+    if (month.length < 2)
+      month = '0' + month;
+    if (day.length < 2)
+      day = '0' + day;
 
     return [day, month, year].join('-');
-}
- 
+  }
+
 
   dateFormat(inputDate: any, format: any) {
     //parse the input date
@@ -580,7 +634,7 @@ close(){
     return format;
   }
 
-  
+
 
 }
 

@@ -4,6 +4,7 @@ import { ErrorStateMatcher } from '@angular/material/core';
 import { CatalogosService } from '../service/catalogos.service';
 import { Observable, throwError } from 'rxjs';
 import { NgxSpinnerService } from "ngx-spinner";
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -26,6 +27,7 @@ export class ScheduleComponent implements OnInit {
   public folio: boolean;
   public serie: boolean;
   public todo: boolean = false;
+  urlTree: any;
   token: string | undefined;
   isDisableButton: boolean = true;
   ///////////Formulario/////////////
@@ -40,20 +42,39 @@ export class ScheduleComponent implements OnInit {
   registersForm: boolean = false;
   delegacionTexto: string;
   readonly: boolean = false;
-
+  tramiteGet: any;
   @ViewChild('recaptchas') captchaRef2: ElementRef;
-  constructor(private catalogoService: CatalogosService, private spinner: NgxSpinnerService) {
+  constructor(private catalogoService: CatalogosService, private spinner: NgxSpinnerService, private router: Router) {
     this.token = undefined;
   }
   ngOnInit(): void {
+    let variable = "";
+    this.urlTree = this.router.parseUrl(this.router.url);
+
+    this.tramiteGet = this.urlTree.queryParams['tramite'];
+
+
 
     //sessionStorage.clear();
-console.log(this.readonly);
-    this.catalogoService.getRegiones().subscribe(response => {
-      console.log(response.data[0].idTrmte)
+
+    this.catalogoService.getTramites().subscribe(response => {
+
       this.tranitesOptions = response.data;
 
       this.tramites = response.data;
+      for (var i = 0; i < response.data.length; i++) {
+
+        if (this.tramiteGet != null || this.tramiteGet != "" || this.tramiteGet != undefined) {
+
+
+          if (this.tramiteGet == response.data[i].idTrmte.split('.')[1]) {
+            this.getValueGet(response.data[i].idTrmte);
+          }
+        }
+      }
+
+
+
     });
   }
 
@@ -63,9 +84,7 @@ console.log(this.readonly);
   }
 
   send(form: NgForm): void {
-    //sessionStorage.setItem('delegaciones','');
-    ///sessionStorage.setItem('datosTyS','');
-    //sessionStorage.setItem('mapCurp','');
+  
     if (form.invalid) {
       for (const control of Object.keys(form.controls)) {
         form.controls[control].markAsTouched();
@@ -78,10 +97,10 @@ console.log(this.readonly);
           "No. Placa": this.plate.value,
           "No. Serie": this.vin.value,
           "curp": this.CURP.value,
-          "folio": this.paymentFolio.value,
+          "folio": this.paymentFolio.value.toString(),
           "serie": this.paymentVin.value,
-          "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value,
-          "foliopago": this.paymentVin.value + "-" + this.paymentFolio.value,
+          "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
+          "foliopago": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
           "servicio": this.ServicioGlobal,
           "tramite": this.tramiteGlobal,
           "tramiteS": this.delegacionTexto,
@@ -91,45 +110,54 @@ console.log(this.readonly);
         };
         sessionStorage.setItem("datosTyS", JSON.stringify(datos));
 
+
+      
         /////////Particular//////
         if (this.ServicioGlobal == 1) {
           if (this.tramiteGlobal == 3) {
-            console.log("entra por que es 3");
-            if (this.paymentFolio.value != "" && this.paymentVin.value != "" && this.CURP.value != "") {
-              console.log("entra por que es 3");
+
+            if ((this.paymentFolio.value.toString() != "" && this.paymentFolio.value.toString().length <= 8) && (this.paymentVin.value != "" && this.paymentVin.value.toString().length == 1) && this.CURP.value != "") {
+
               let json = {
                 "No. Placa": this.plate.value,
 
                 "curp": this.CURP.value,
-                "folio": this.paymentFolio.value,
+                "folio": this.paymentFolio.value.toString(),
                 "serie": this.paymentVin.value,
-                "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value,
+                "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
                 "servicio": this.ServicioGlobal,
                 "tramites": this.tramiteGlobal
               };
 
               try {
                 this.catalogoService.validationCurp(json).subscribe(response => {
-                  console.log("CURP--------------");
-                  console.log(response.curp.map);
+                
 
                   if (response.curp) {
 
-                    console.log("REset capchat");
+
 
                     sessionStorage.setItem('mapCurp', JSON.stringify(response.curp.map));
-                    console.log(json);
+
                     this.catalogoService.delegacionesById(json).subscribe(response => {
-                      console.log(response);
+
                       if (response.data != null) {
                         sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
                         this.spinner.hide();
                         this.token = undefined;
                         this.recaptchaC = false;
                         this.registersForm = true;
-                        this.readonly= true;
+                        this.readonly = true;
                       }
                     });
+                  } else {
+                    this.spinner.hide();
+                    Swal.fire({
+                      icon: 'error',
+                      title: response.menseje,
+                      text: 'vuelva a intentarlo',
+
+                    })
                   }
 
 
@@ -137,6 +165,7 @@ console.log(this.readonly);
 
               }
               catch (error) {
+                this.spinner.hide();
                 Swal.fire({
                   icon: 'error',
                   title: 'Ocurrio un error',
@@ -145,6 +174,14 @@ console.log(this.readonly);
                 })
               }
 
+            } else {
+              this.spinner.hide();
+              Swal.fire({
+                icon: 'error',
+                title: 'Error en los datos del formulario',
+                text: 'Verifique los datos colocados que sean correctos',
+
+              })
             }
           } else if (this.tramiteGlobal == 1) {
             if (this.plate.value != "" && this.vin.value != "" && this.CURP.value != "") {
@@ -157,32 +194,39 @@ console.log(this.readonly);
                 "servicio": this.ServicioGlobal,
                 "tramites": this.tramiteGlobal
               };
-              console.log(json);
+
               this.catalogoService.validation(json).subscribe(response => {
-                console.log(response.curp.map);
+
 
                 if (response.data) {
                   sessionStorage.setItem('mapCurp', JSON.stringify(response.curp.map))
-                  console.log("REset capchat");
-                  console.log(json);
+
 
 
                   this.catalogoService.delegacionesById(json).subscribe(response => {
-                    console.log("---------------------");
-                    console.log(response);
+
                     if (response.data != null) {
-                      console.log(response.data);
+
                       sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
                       this.spinner.hide();
                       this.token = undefined;
                       this.recaptchaC = false;
                       this.registersForm = true;
-                      this.readonly= true;
+                      this.readonly = true;
                     }
                   });
 
 
+                } else {
+                  this.spinner.hide();
+                  Swal.fire({
+                    icon: 'error',
+                    title: response.menseje,
+                    text: 'vuelva a intentarlo',
+
+                  })
                 }
+
 
               });
             } else {
@@ -193,47 +237,54 @@ console.log(this.readonly);
                 text: 'Verifique que los campos estén correctamente llenos',
 
               })
-              console.log("Hacen falta llenar algunos campos ");
+
             }
           } else {
-            if (this.plate.value != "" && this.vin.value != "" && this.paymentFolio.value != "" && this.paymentVin.value != "" && this.CURP.value != "") {
+            if (this.plate.value != "" && this.vin.value != "" && (this.paymentFolio.value.toString() != "" && this.paymentFolio.value.toString().length <= 8) && (this.paymentVin.value != "" && this.paymentVin.value.toString().length == 1) && this.CURP.value != "") {
 
               let json = {
                 "No. Placa": this.plate.value,
                 "No. Serie": this.vin.value,
                 "curp": this.CURP.value,
-                "folio": this.paymentFolio.value,
+                "folio": this.paymentFolio.value.toString(),
                 "serie": this.paymentVin.value,
-                "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value,
+                "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
                 "servicio": this.ServicioGlobal,
                 "tramites": this.tramiteGlobal
               };
-              console.log(json);
+
               this.catalogoService.validation(json).subscribe(response => {
-                console.log(response.curp.map);
+
 
                 if (response.data) {
                   sessionStorage.setItem('mapCurp', JSON.stringify(response.curp.map))
-                  console.log("REset capchat");
-                  console.log(json);
+
 
 
                   this.catalogoService.delegacionesById(json).subscribe(response => {
-                    console.log("---------------------");
-                    console.log(response);
+
                     if (response.data != null) {
-                      console.log(response.data);
+
                       sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
                       this.spinner.hide();
                       this.token = undefined;
                       this.recaptchaC = false;
                       this.registersForm = true;
-                      this.readonly= true;
+                      this.readonly = true;
                     }
                   });
 
 
+                } else {
+                  this.spinner.hide();
+                  Swal.fire({
+                    icon: 'error',
+                    title: response.menseje,
+                    text: 'vuelva a intentarlo',
+
+                  })
                 }
+
 
               });
             } else {
@@ -244,7 +295,7 @@ console.log(this.readonly);
                 text: 'Verifique que los campos estén correctamente llenos',
 
               })
-              console.log("Hacen falta llenar algunos campos ");
+
             }
           }
           /////////Público//////
@@ -256,33 +307,43 @@ console.log(this.readonly);
 
               "curp": this.CURP.value,
 
-              "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value,
+              "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
               "servicio": this.ServicioGlobal,
               "tramites": this.tramiteGlobal
             };
             this.catalogoService.validation(json).subscribe(response => {
-              console.log(response)
+
               if (response.data) {
 
-                console.log("REset capchat");
+
 
 
                 this.catalogoService.delegacionesById(json).subscribe(response => {
                   if (response.data != null) {
-                    console.log(response.data);
+
                     sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
                     this.spinner.hide();
                     this.token = undefined;
                     this.recaptchaC = false;
                     this.registersForm = true;
-                    this.readonly= true;
+                    this.readonly = true;
                   }
                 });
+              } else {
+
+                this.spinner.hide();
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error en los campos del formulario',
+                  text: response.menseje,
+
+                })
               }
+
 
             });
           } else {
-            console.log("Hacen falta llenar algunos campos ");
+
             this.spinner.hide();
             Swal.fire({
               icon: 'error',
@@ -298,47 +359,69 @@ console.log(this.readonly);
           /////////Licencias//////
         } else {
 
-          if (this.paymentFolio.value != "" && this.paymentVin.value != "" && this.CURP.value != "") {
+
+          if ((this.paymentFolio.value.toString() != "" && this.paymentFolio.value.toString().length <= 8) && (this.paymentVin.value != "" && this.paymentVin.value.toString().length == 1) && this.CURP.value != "") {
             let json = {
               "No. Placa": this.plate.value,
 
               "curp": this.CURP.value,
-              "folio": this.paymentFolio.value,
+              "folio": this.paymentFolio.value.toString(),
               "serie": this.paymentVin.value,
-              "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value,
+              "seriefolio": this.paymentVin.value + "-" + this.paymentFolio.value.toString(),
               "servicio": this.ServicioGlobal,
               "tramites": this.tramiteGlobal
             };
 
 
             this.catalogoService.validationCurp(json).subscribe(response => {
-              console.log("CURP--------------");
-              console.log(response.curp.map);
 
-              if (response.curp) {
 
-                console.log("REset capchat");
+            
+              if (response != null) {
+                if (response.curp || response.curp != null) {
 
-                sessionStorage.setItem('mapCurp', JSON.stringify(response.curp.map));
-                console.log(json);
-                this.catalogoService.delegacionesById(json).subscribe(response => {
-                  console.log(response);
-                  if (response.data != null) {
-                    sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
-                    this.spinner.hide();
-                    this.token = undefined;
-                    this.recaptchaC = false;
-                    this.registersForm = true;
-                    this.readonly= true;
-                  }
-                });
+
+
+                  sessionStorage.setItem('mapCurp', JSON.stringify(response.curp.map));
+
+                  this.catalogoService.delegacionesById(json).subscribe(response => {
+
+                    if (response.data != null) {
+                      sessionStorage.setItem('delegaciones', JSON.stringify(response.data))
+                      this.spinner.hide();
+                      this.token = undefined;
+                      this.recaptchaC = false;
+                      this.registersForm = true;
+                      this.readonly = true;
+                    }
+                  });
+                } else {
+                  this.spinner.hide();
+                  Swal.fire({
+                    icon: 'error',
+                    title: response.menseje,
+                    text: 'vuelva a intentarlo',
+
+                  })
+                }
+
+              }else{
+                this.spinner.hide();
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Error en los campos del formulario',
+              text: 'Verifique que los campos estén correctamente llenos',
+
+            })
               }
+
 
 
             });
           } else {
             this.spinner.hide();
-            console.log("Hacen falta llenar algunos campos ");
+
             Swal.fire({
               icon: 'error',
               title: 'Error en los campos del formulario',
@@ -364,34 +447,34 @@ console.log(this.readonly);
       }
     }
 
-    console.debug(`Token [${this.token}] generated`);
+
   }
 
   resolved(captchaResponse: string) {
-    console.log(`Resolved captcha with response: ${captchaResponse}`);
-  }
 
-  getValue(value: any) {
-    console.log(value.target.value);
+  }
+  getValueGet(value: any) {
     this.plate = new FormControl('', [Validators.required]);
     this.vin = new FormControl('', [Validators.required]);
-    this.paymentFolio = new FormControl('', [Validators.required]);
-    this.paymentVin = new FormControl('', [Validators.required]);
+    this.paymentFolio = new FormControl('', [Validators.required, Validators.maxLength(8)]);
+    this.paymentVin = new FormControl('', [Validators.required, Validators.maxLength(1), Validators.pattern("[A-Za-z]")]);
     this.CURP = new FormControl('', [Validators.required]);
-    if (value.target.value != 0) {
+
+
+
+    if (value != 0) {
       this.todo = true;
       this.recaptchaC = true;
-      this.catalogoService.getRequerimientos(value).subscribe(response => {
-        console.log(value.target);
-        console.log(this.tramites);
+      this.catalogoService.getRequerimientosGet(value).subscribe(response => {
 
 
 
-        let service = value.target.value.split('.')[0];
-        let tramite = value.target.value.split('.')[1];
+
+        let service = value.split('.')[0];
+        let tramite = value.split('.')[1];
         this.tramiteGlobal = tramite;
         this.ServicioGlobal = service;
-        console.log(this.tramiteGlobal);
+
         for (let i = 0; i < this.tramites.length; i++) {
 
           if (this.tramites[i].idTrmte.split('.')[1] == this.tramiteGlobal) {
@@ -400,7 +483,7 @@ console.log(this.readonly);
 
           }
         }
-        console.log(this.delegacionTexto);
+
 
         if (response.data.regla1 == "No. Placa") {
 
@@ -449,13 +532,13 @@ console.log(this.readonly);
             this.folio = true;
           }
         } else {
-          console.log("no serie");
+
           this.NoSerie = false;
         }
 
 
         if (service == 2) {
-          console.log("serie no");
+
           this.serie = false;
           this.folio = false;
           //   this.NoSerie = false;
@@ -471,8 +554,115 @@ console.log(this.readonly);
     } else {
       this.plate = new FormControl('', [Validators.required]);
       this.vin = new FormControl('', [Validators.required]);
-      this.paymentFolio = new FormControl('', [Validators.required]);
-      this.paymentVin = new FormControl('', [Validators.required]);
+      this.paymentFolio = new FormControl('', [Validators.required, Validators.maxLength(8)]);
+      this.paymentVin = new FormControl('', [Validators.required, Validators.maxLength(1), Validators.pattern("[A-Za-z]")]);
+      this.CURP = new FormControl('', [Validators.required]);
+
+      this.todo = false;
+      this.recaptchaC = false;
+    }
+
+  }
+  getValue(value: any) {
+
+    this.plate = new FormControl('', [Validators.required]);
+    this.vin = new FormControl('', [Validators.required]);
+    this.paymentFolio = new FormControl('', [Validators.required, Validators.maxLength(8)]);
+    this.paymentVin = new FormControl('', [Validators.required, Validators.maxLength(1), Validators.pattern("[A-Za-z]")]);
+    this.CURP = new FormControl('', [Validators.required]);
+    if (value.target.value != 0) {
+      this.todo = true;
+      this.recaptchaC = true;
+      this.catalogoService.getRequerimientos(value).subscribe(response => {
+
+
+
+        let service = value.target.value.split('.')[0];
+        let tramite = value.target.value.split('.')[1];
+        this.tramiteGlobal = tramite;
+        this.ServicioGlobal = service;
+
+        for (let i = 0; i < this.tramites.length; i++) {
+
+          if (this.tramites[i].idTrmte.split('.')[1] == this.tramiteGlobal) {
+            this.delegacionTexto = this.tramites[i].tramite;
+
+
+          }
+        }
+
+
+        if (response.data.regla1 == "No. Placa") {
+
+          if (tramite == 3) {
+
+            this.NoPlaca = false;
+          } else {
+            this.NoPlaca = true;
+
+
+          }
+
+          /* if (tramite == 1) {
+             console.log("1 tramite");
+             this.NoPlaca = true;
+             this.NoSerie = true;
+             this.folio = false;
+             this.serie = false;
+             console.log(  this.folio);
+             console.log(  this.serie);
+           }*/
+
+
+
+
+
+        } else {
+          this.NoPlaca = false;
+
+        }
+
+        if (response.data.regla2 == "No. Serie" && service != 2) {
+
+
+          if (tramite == 3) {
+            this.NoSerie = false;
+          } else {
+            this.NoSerie = true;
+          }
+
+          if (tramite == 1) {
+            this.serie = false;
+            this.folio = false;
+          } else {
+            this.serie = true;
+            this.folio = true;
+          }
+        } else {
+
+          this.NoSerie = false;
+        }
+
+
+        if (service == 2) {
+
+          this.serie = false;
+          this.folio = false;
+          //   this.NoSerie = false;
+        } else if (service != 2 && tramite != 1) {
+
+          this.serie = true;
+          this.folio = true;
+        }
+
+
+
+      })
+    } else {
+      this.plate = new FormControl('', [Validators.required]);
+      this.vin = new FormControl('', [Validators.required]);
+      this.paymentFolio = new FormControl('', [Validators.required, Validators.maxLength(8)]);
+      this.paymentVin = new FormControl('', [Validators.required, Validators.maxLength(1), Validators.pattern("[A-Za-z]")]);
       this.CURP = new FormControl('', [Validators.required]);
 
       this.todo = false;
@@ -484,17 +674,23 @@ console.log(this.readonly);
   delegaciones(json: any) {
     this.catalogoService.delegacionesById(json).subscribe(response => {
 
-      console.log(response.data);
+
       return JSON.stringify(response.data);
 
     });
   }
 
+  
+
   convertDateFormat(string: any) {
     var info = string.split('-');
     return info[2] + '-' + info[1] + '-' + info[0];
   }
+  refresh(): void {
+     window.location.reload();
+     }
 
+  
 
   dateFormat(inputDate: any, format: any) {
     //parse the input date
